@@ -7,7 +7,9 @@
 	<script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.23.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script type="text/javascript">
+	var userStop = false;
 	function playMidi() {
+		userStop = true;
 		$("#player1")[0].stop();
 		$("#player1").prop('src', "./PSGConverter.php?" + $('form').serialize());
 		return false;
@@ -15,6 +17,13 @@
 	$(function() {
 		$("#player1").on('load', function() {
 			$("#player1")[0].start();
+		});
+		$("#player1").on('stop', function() {
+			if (!userStop)
+			{
+				$("#player1")[0].start();
+				userStop = false;
+			}
 		});
 	});
 	</script>
