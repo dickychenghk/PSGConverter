@@ -107,7 +107,7 @@ function getMid(){
 	$tracks = $this->tracks;
 	$tc = count($tracks);
 	$type = ($tc > 1)?1:0;
-	$midStr = "MThd\0\0\0\6\0".chr($type)._POSTBytes($tc,2)._POSTBytes($this->timebase,2);
+	$midStr = "MThd\0\0\0\6\0".chr($type)._getBytes($tc,2)._getBytes($this->timebase,2);
 	for ($i=0;$i<$tc;$i++){
 		$track = $tracks[$i];
 		$mc = count($track);
@@ -119,13 +119,13 @@ function getMid(){
 
 		for ($j=0;$j<$mc;$j++){
 			$line = $track[$j];
-			$t = $this->_POSTTime($line);
+			$t = $this->_getTime($line);
 			$dt = $t - $time;
 			$time = $t;
 			$midStr .= _writeVarLen($dt);
 
 			// repetition, same event, same channel, omit first byte (smaller file size)
-			$str = $this->_POSTMsgStr($line);
+			$str = $this->_getMsgStr($line);
 			$start = ord($str[0]);
 			if ($start>=0x80 && $start<=0xEF && $start==$last) $str = substr($str, 1);
 			$last = $start;
@@ -133,7 +133,7 @@ function getMid(){
 			$midStr .= $str;
 		}
 		$trackLen = strlen($midStr) - $trackStart;
-		$midStr = substr($midStr,0,$trackStart)._POSTBytes($trackLen,4).substr($midStr,$trackStart);
+		$midStr = substr($midStr,0,$trackStart)._getBytes($trackLen,4).substr($midStr,$trackStart);
 	}
 	return $midStr;
 }
@@ -172,14 +172,14 @@ function downloadMidFile($output, $file=false){
 //---------------------------------------------------------------
 // returns time code of message string
 //---------------------------------------------------------------
-function _POSTTime($msgStr){
+function _getTime($msgStr){
 	return (int) strtok($msgStr,' ');
 }
 
 //---------------------------------------------------------------
 // returns binary code for message string
 //---------------------------------------------------------------
-function _POSTMsgStr($line){
+function _getMsgStr($line){
 	$msg = explode(' ',$line);
 	switch($msg[1]){
 		case 'PrCh': // 0x0C
@@ -266,7 +266,7 @@ function _POSTMsgStr($line){
 			}
 			break;
 		case 'Tempo': // 0x51
-			$tempo = _POSTBytes((int)$msg[2],3);
+			$tempo = _getBytes((int)$msg[2],3);
 			return "\xFF\x51\x03$tempo";
 			break;
 		case 'SMPTE': // 0x54 = SMPTE offset
@@ -335,7 +335,7 @@ function _hex2bin($hex_str) {
 //---------------------------------------------------------------
 // int to bytes (length $len)
 //---------------------------------------------------------------
-function _POSTBytes($n,$len){
+function _getBytes($n,$len){
 	$str='';
 	for ($i=$len-1;$i>=0;$i--){
 		$str.=chr(floor($n/pow(256,$i)));
@@ -378,18 +378,18 @@ function _err($str){
 
 $debug =0;
 
-if (! isset($_POST['m'])) {
+if (! isset($_REQUEST['m'])) {
 	// 音色番号→$inst
-	$inst   = (isset($_POST['i'])) ? (int)$_POST['i'] : 1;	// 楽器設定
-	$isDrum = (isset($_POST['d'])) ? (int)$_POST['d'] : 0;	// ドラムパートか？
-	$ch     = (isset($_POST['c'])) ? (int)$_POST['c'] : (($isDrum !== 0) ? 10 : 1);		// 使用チャンネル（ドラムだった場合は、10にする）
+	$inst   = (isset($_REQUEST['i'])) ? (int)$_REQUEST['i'] : 1;	// 楽器設定
+	$isDrum = (isset($_REQUEST['d'])) ? (int)$_REQUEST['d'] : 0;	// ドラムパートか？
+	$ch     = (isset($_REQUEST['c'])) ? (int)$_REQUEST['c'] : (($isDrum !== 0) ? 10 : 1);		// 使用チャンネル（ドラムだった場合は、10にする）
 	if(($inst<1) || (128<$inst)) $inst=1;	// 楽器の範囲は、1~128
 	// 2.1 Add
-	$Hlimit = (isset($_POST['h'])) ? (int)$_POST['h'] : 88;	// 音階の最高値
-	$Llimit = (isset($_POST['l'])) ? (int)$_POST['l'] : 16;	// 音階の最低値
+	$Hlimit = (isset($_REQUEST['h'])) ? (int)$_REQUEST['h'] : 88;	// 音階の最高値
+	$Llimit = (isset($_REQUEST['l'])) ? (int)$_REQUEST['l'] : 16;	// 音階の最低値
 }else{
 	// プリセットの楽器番号を使う（0は無効。楽器設定などのパラメータは無視されます。3MLE互換）
-	switch ($_POST['m']){
+	switch ($_REQUEST['m']){
 		case 1:	// リュート
 			$inst = 24;
 			$Hlimit = 88;
@@ -450,11 +450,11 @@ if (! isset($_POST['m'])) {
 	}
 }
 
-$effect = (isset($_POST['e'])) ? (int)$_POST['e'] : 40;	// エフェクトの量
-$pan    = (isset($_POST['p'])) ? (int)$_POST['p'] : 64;	// パンポッド
+$effect = (isset($_REQUEST['e'])) ? (int)$_REQUEST['e'] : 40;	// エフェクトの量
+$pan    = (isset($_REQUEST['p'])) ? (int)$_REQUEST['p'] : 64;	// パンポッド
 
-if(isset($_POST['s'])) { 
-	$mml = rawurldecode($_POST['s']);
+if(isset($_REQUEST['s'])) { 
+	$mml = rawurldecode($_REQUEST['s']);
 }else {
 	header('Content-Type: text/plain');
 	die("PSGConverter.php v2.0 Usage:\nPSGConverter.php?\n\ti=(instrumental id | default = 1 Piano)\n\t&s=(encoded mml data)\n\t[\n\t\t&p=(panpot | default=64)\n\t\t&c=(ch | defalut=1)\n\t\t&e=(effect value | default=40)\n\t\t&d=(Drum part note)\n\t\t&h=note high limit\n\t\t&l=note low limit\n\t]");
