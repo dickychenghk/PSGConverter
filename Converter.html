@@ -4,6 +4,20 @@
 <head>
     <meta charset="utf-8" />
     <title>Converter</title>
+	<script src="https://cdn.jsdelivr.net/combine/npm/tone@14.7.58,npm/@magenta/music@1.23.1/es6/core.js,npm/focus-visible@5,npm/html-midi-player@1.4.0"></script>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript">
+	function playMidi() {
+		$("#player1")[0].stop();
+		$("#player1").prop('src', "./PSGConverter.php?" + $('form').serialize());
+		return false;
+	}
+	$(function() {
+		$("#player1").on('load', function() {
+			$("#player1")[0].start();
+		});
+	});
+	</script>
 </head>
 <body>
     <form action="./PSGConverter.php" method="post">
@@ -201,6 +215,16 @@
         </table>
         <br />
         <input type="submit" value="Submit" />
+		<button onclick="return playMidi();">Play Midi</button> 
     </form>
+	<br/>
+	<midi-player
+	  id="player1" name="player1"
+	  src=""
+	  sound-font visualizer="#myVisualizer">
+	</midi-player>
+	<midi-visualizer type="piano-roll" id="myVisualizer"></midi-visualizer>
+	<br />
+	<a href="https://github.com/cifkao/html-midi-player/">html-midi-player</a>
 </body>
 </html>
