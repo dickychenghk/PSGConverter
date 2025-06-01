@@ -11,7 +11,7 @@
 	function playMidi() {
 		userStop = true;
 		$("#player1")[0].stop();
-		$("#player1").prop('src', "./PSGConverter.php?" + $('form').serialize());
+		$("#player1").prop('src', "./PSGConverter_PHP8.php?" + $('form').serialize());
 		return false;
 	}
 	$(function() {
@@ -30,7 +30,7 @@
 	</script>
 </head>
 <body>
-    <form action="./PSGConverter.php" method="post">
+    <form action="./PSGConverter_PHP8.php" method="post">
         <table>
             <tr>
                 <td>
